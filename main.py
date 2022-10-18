@@ -24,7 +24,8 @@ data_train = train_file.read().split("\n")
 train_json = []
 tokenizer = RegexpTokenizer(r'\w+')
 
-for line in data_train:
+for c, line in enumerate(data_train):
+    
     line_json = json.loads(line)
     sentence = line_json["sentence"]
     print(sentence)
@@ -45,20 +46,25 @@ for line in data_train:
             # print(len(temp))
             temp = sorted(temp)
 
-
             text_nosp[i] = temp[0][1]
-
 
         text_nosp[i] = ps.stem(text_nosp[i])
 
-    train_json.append({"sentence": text_nosp, "label": line_json["label"], "identifier": line_json["identifier"]})
-    print(text_nosp)
+train_json.append({"sentence": text_nosp, "label": line_json["label"], "identifier": line_json["identifier"]})
+print(text_nosp)
 for line in train_json:
     print(line)
 
 
+def saveToJson(input):
+    json_object = json.dumps(input)
+
+    # Writing to sample.json
+    with open("sample.json", "w") as outfile:
+        outfile.write(json_object)
 
 
+saveToJson(train_json)
 
 # @todo
 """

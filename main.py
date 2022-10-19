@@ -17,6 +17,12 @@ correct_words = words.words()  # correct words
 stopwords_list = stopwords.words('english')  # stopwords
 tokenizer = RegexpTokenizer(r'\w+')  # punctuation removal and tokenization
 
+
+def save_to_json(data, file):
+    with open(file, 'w') as f:
+        json.dump(data, f)
+
+
 data_train = train_file.read().split("\n")
 train_json = []
 
@@ -47,9 +53,7 @@ for line in data_train:
     lines_preprocessed += 1
     print(f"Line {lines_preprocessed}/{len(data_train)} preprocessed")
     if lines_preprocessed % 100 == 0:
-        with open('preprocessed_train.json', 'w') as f:
-            json.dump(train_json, f)
+        save_to_json(train_json, 'preprocessed_train.json')
 
 # Writing all the preprocessed data into a new json
-with open('preprocessed_train.json', 'w') as f:
-    json.dump(train_json, f)
+save_to_json(train_json, 'preprocessed_train.json')

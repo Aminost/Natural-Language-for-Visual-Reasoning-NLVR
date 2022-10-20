@@ -26,9 +26,18 @@ def save_to_json(data, file):
 data_train = train_file.read().split("\n")
 train_json = []
 
+# In case some lines have already been preprocessed
+saved_lines = open("preprocessed_train_backup.json",'r').read()
+saved_lines = json.loads(saved_lines)
+train_json = saved_lines
+saved_lines_amount = len(saved_lines)
+
 # Preprocessing one line at a time and adding it to a list to create an actual json
 lines_preprocessed = 0
 for line in data_train:
+    lines_preprocessed += 1
+    if lines_preprocessed < saved_lines_amount:
+        continue
     line_json = json.loads(line)  # reading the line as a json object
     sentence = line_json["sentence"]
 
@@ -50,7 +59,6 @@ for line in data_train:
     train_json.append({"sentence": text_nosp, "label": line_json["label"], "identifier": line_json["identifier"]})
 
     # Saving every 100 lines just in case
-    lines_preprocessed += 1
     print(f"Line {lines_preprocessed}/{len(data_train)} preprocessed")
     if lines_preprocessed % 100 == 0:
         save_to_json(train_json, 'preprocessed_train.json')

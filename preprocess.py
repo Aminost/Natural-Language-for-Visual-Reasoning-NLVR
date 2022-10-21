@@ -29,8 +29,9 @@ saved_lines_amount = 0
 
 # In case some lines have already been preprocessed
 try:
-    saved_lines = open("preprocessed-dataset/preprocessed_train_backup.json", 'r').read()
-    saved_lines = json.loads(saved_lines)
+    saved_file = open("preprocessed-dataset/preprocessed_train_backup.json", 'r')
+    saved_lines = json.loads(saved_file.read())
+    saved_file.close()
     saved_lines_amount = len(saved_lines)
     if saved_lines_amount != 0:
         train_json = saved_lines

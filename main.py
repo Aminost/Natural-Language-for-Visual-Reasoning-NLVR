@@ -10,7 +10,7 @@ nltk.download('words')
 nltk.download('stopwords')
 from nltk.corpus import words
 
-train_file = open("dataset/nlvr-master/nlvr/train/train.json")
+train_file = open("nlvr-dataset/nlvr/train/train.json")
 
 ps = PorterStemmer()  # reducing or chopping the words into their root forms
 correct_words = words.words()  # correct words
@@ -25,12 +25,17 @@ def save_to_json(data, file):
 
 data_train = train_file.read().split("\n")
 train_json = []
+saved_lines_amount = 0
 
 # In case some lines have already been preprocessed
-saved_lines = open("preprocessed_train_backup.json",'r').read()
-saved_lines = json.loads(saved_lines)
-train_json = saved_lines
-saved_lines_amount = len(saved_lines)
+try:
+    saved_lines = open("preprocessed-dataset/preprocessed_train_backup.json", 'r').read()
+    saved_lines = json.loads(saved_lines)
+    saved_lines_amount = len(saved_lines)
+    if saved_lines_amount != 0:
+        train_json = saved_lines
+except:
+    pass
 
 # Preprocessing one line at a time and adding it to a list to create an actual json
 lines_preprocessed = 0
@@ -61,7 +66,7 @@ for line in data_train:
     # Saving every 100 lines just in case
     print(f"Line {lines_preprocessed}/{len(data_train)} preprocessed")
     if lines_preprocessed % 100 == 0:
-        save_to_json(train_json, 'preprocessed_train.json')
+        save_to_json(train_json, 'preprocessed-dataset/preprocessed_train.json')
 
 # Writing all the preprocessed data into a new json
-save_to_json(train_json, 'preprocessed_train.json')
+save_to_json(train_json, 'preprocessed-dataset/preprocessed_train.json')

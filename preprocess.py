@@ -20,10 +20,13 @@ saving_enabled = True  # Set that to true if we have to save the preprocessed da
 shape_correction = {'Yellow': 'yellow', '#0099ff': 'blue', 'Black': 'black'}
 
 
-def save_to_json(data, file):
+def save_to_json(lines_number, data, file):
     if saving_enabled:
         with open(file, 'w') as f:
             json.dump(data, f)
+        with open("lines_number_backup", 'w') as f: # in case of saving in multiple execution
+            json.dump(lines_number, f)
+
 
 
 data_train = train_file.read().split("\n")
@@ -35,14 +38,17 @@ try:
     saved_file = open("preprocessed-dataset/preprocessed_train_backup.json", 'r')
     saved_lines = json.loads(saved_file.read())
     saved_file.close()
-    saved_lines_amount = len(saved_lines)
+    saved_lines_file = open("lines_number_backup")
+    saved_lines_amount = int(saved_lines_file.read())
+    saved_lines_file.close()
     if saved_lines_amount != 0:
         train_json = saved_lines
+
 except:
     pass
 
-# Preprocessing one line at a time and adding it to a list to create an actual json
 lines_preprocessed = 0
+# Preprocessing one line at a time and adding it to a list to create an actual json
 for line in data_train:
     lines_preprocessed += 1
     if lines_preprocessed < saved_lines_amount:
@@ -78,11 +84,10 @@ for line in data_train:
 
     # Formatting the data into a proper json array
     train_json.append({"sentence": text_nosp, "structured_rep": structured_rep, "identifier": line_json["identifier"]})
-    print(train_json)
     # Saving every 100 lines just in case
     print(f"Line {lines_preprocessed}/{len(data_train)} preprocessed")
     if lines_preprocessed % 100 == 0:
-        save_to_json(train_json, 'preprocessed-dataset/preprocessed_train_v2.json')
+        save_to_json(lines_preprocessed, train_json, 'preprocessed-dataset/preprocessed_train_v2.json')
 
 # Writing all the preprocessed data into a new json
-save_to_json(train_json, 'preprocessed-dataset/preprocessed_train_v2.json')
+save_to_json(lines_preprocessed, train_json, 'preprocessed-dataset/preprocessed_train_v2.json')

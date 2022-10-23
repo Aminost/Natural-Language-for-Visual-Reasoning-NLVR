@@ -1,7 +1,7 @@
 import json
 
 preprocessed_data = []
-with open("preprocessed-dataset/preprocessed_train.json") as f:
+with open("preprocessed-dataset/preprocessed_train_v1.json") as f:
     preprocessed_data = json.loads(f.read())
 
 identified_words = []  # List of tuples (word, occurrences)

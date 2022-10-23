@@ -16,11 +16,14 @@ ps = PorterStemmer()  # reducing or chopping the words into their root forms
 correct_words = words.words()  # correct words
 stopwords_list = stopwords.words('english')  # stopwords
 tokenizer = RegexpTokenizer(r'\w+')  # punctuation removal and tokenization
+saving_enabled = True  # Set that to true if we have to save the preprocessed data
+shape_correction = {'Yellow': 'yellow', '#0099ff': 'blue', 'Black': 'black'}
 
 
 def save_to_json(data, file):
-    with open(file, 'w') as f:
-        json.dump(data, f)
+    if saving_enabled:
+        with open(file, 'w') as f:
+            json.dump(data, f)
 
 
 data_train = train_file.read().split("\n")
@@ -45,6 +48,18 @@ for line in data_train:
     if lines_preprocessed < saved_lines_amount:
         continue
     line_json = json.loads(line)  # reading the line as a json object
+
+    if line_json["label"] == "false":  # Only use tests labelled as "true"
+        continue
+
+    structured_rep = line_json["structured_rep"]
+    for i, el in enumerate(structured_rep):
+        for j, shape in enumerate(el):
+            if shape['color'] in shape_correction.keys():
+                shape['color'] = shape_correction[shape['color']]
+            el[j] = shape
+        structured_rep[i] = el
+
     sentence = line_json["sentence"]
 
     text = tokenizer.tokenize(sentence)  # removing punctuation and tokenizing
@@ -62,12 +77,12 @@ for line in data_train:
         text_nosp[i] = ps.stem(text_nosp[i])  # stemming
 
     # Formatting the data into a proper json array
-    train_json.append({"sentence": text_nosp, "label": line_json["label"], "identifier": line_json["identifier"]})
-
+    train_json.append({"sentence": text_nosp, "structured_rep": structured_rep, "identifier": line_json["identifier"]})
+    print(train_json)
     # Saving every 100 lines just in case
     print(f"Line {lines_preprocessed}/{len(data_train)} preprocessed")
     if lines_preprocessed % 100 == 0:
-        save_to_json(train_json, 'preprocessed-dataset/preprocessed_train.json')
+        save_to_json(train_json, 'preprocessed-dataset/preprocessed_train_v2.json')
 
 # Writing all the preprocessed data into a new json
-save_to_json(train_json, 'preprocessed-dataset/preprocessed_train.json')
+save_to_json(train_json, 'preprocessed-dataset/preprocessed_train_v2.json')

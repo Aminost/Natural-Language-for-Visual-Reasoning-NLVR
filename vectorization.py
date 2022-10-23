@@ -3,7 +3,7 @@ import json
 from gensim.models import Word2Vec
 
 sentence = []
-f = open('preprocessed-dataset/preprocessed_train.json', 'r')
+f = open('preprocessed-dataset/preprocessed_train_v1.json', 'r')
 data = json.load(f)
 word_list=[]
 for i in  data:

@@ -24,14 +24,12 @@ def save_to_json(lines_number, data, file):
     if saving_enabled:
         with open(file, 'w') as f:
             json.dump(data, f)
-        with open("lines_number_backup", 'w') as f: # in case of saving in multiple execution
+        with open("lines_number_backup", 'w') as f:  # in case of saving in multiple execution
             json.dump(lines_number, f)
-
 
 
 data_train = train_file.read().split("\n")
 train_json = []
-saved_lines_amount = 0
 
 # In case some lines have already been preprocessed
 try:

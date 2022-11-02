@@ -22,7 +22,7 @@ from keras.utils import pad_sequences
 from keras_preprocessing.text import Tokenizer
 from torch import device
 
-import preprocessing_utils
+import preprocessing_utils_v1
 
 def get_structured_representations(data):
     formatted_data = []
@@ -105,14 +105,14 @@ with open('nlvr-dataset/nlvr/dev/dev.json', 'r') as json_file:
 with open('nlvr-dataset/nlvr/test/test.json', 'r') as json_file:
     data_test = [json.loads(line) for line in json_file]
 
-data_train = preprocessing_utils.prepare_data(data_train) + preprocessing_utils.prepare_data(data_dev)
-data_test = preprocessing_utils.prepare_data(data_test)
+data_train = preprocessing_utils_v1.prepare_data(data_train) + preprocessing_utils_v1.prepare_data(data_dev)
+data_test = preprocessing_utils_v1.prepare_data(data_test)
 
 Train_T = [Annot['sentence'] for Annot in data_train]
 Test_T = [Annot['sentence'] for Annot in data_test]
 
-Train_T = list(map(preprocessing_utils.preprocess, Train_T))
-Test_T = list(map(preprocessing_utils.preprocess, Test_T))
+Train_T = list(map(preprocessing_utils_v1.preprocess, Train_T))
+Test_T = list(map(preprocessing_utils_v1.preprocess, Test_T))
 
 Train_T = ['startseq ' + text + ' endseq' for text in Train_T]
 Test_T = ['startseq ' + text + ' endseq' for text in Test_T]

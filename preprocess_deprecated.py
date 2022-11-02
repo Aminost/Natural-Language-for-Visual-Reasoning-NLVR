@@ -107,13 +107,15 @@ for line in data_train:
                  t not in stopwords_list and t not in sentence_removal]  # removing new stopwords
     # and unwanted corrections
 
+    text_nosp = "startseq " + ' '.join(text_nosp) + " endseq"
     print(text_nosp)
+
     # Formatting the data into a proper json array
     train_json.append({"sentence": text_nosp, "structured_rep": structured_rep, "identifier": line_json["identifier"]})
     # Saving every 100 lines just in case
     print(f"Line {lines_preprocessed}/{len(data_train)} preprocessed")
     if lines_preprocessed % 100 == 0:
-        save_to_json(lines_preprocessed, train_json, 'preprocessed-dataset/preprocessed_hidden_v3.json')
+        save_to_json(lines_preprocessed, train_json, 'preprocessed-dataset/preprocessed_hidden_v4.json')
 
 # Writing all the preprocessed data into a new json
-save_to_json(lines_preprocessed, train_json, 'preprocessed-dataset/preprocessed_hidden_v3.json')
+save_to_json(lines_preprocessed, train_json, 'preprocessed-dataset/preprocessed_hidden_v4.json')

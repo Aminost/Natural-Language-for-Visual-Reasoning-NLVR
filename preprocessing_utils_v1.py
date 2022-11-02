@@ -59,8 +59,8 @@ def prepare_data(data, all=False):
 
 
 def preprocess(text):
-    words = text.lower().strip()
-    words = tokenizer.tokenize(words)  # removing punctuation and tokenizing
+    text = text.lower().strip()
+    words = tokenizer.tokenize(text)  # removing punctuation and tokenizing
     words = [word if not word in numbers.keys() else numbers[word] for word in words]
     words = [word if not word in corrections.keys() else corrections[word] for word in words]
     words = [word if not word in corrections2.keys() else corrections2[word] for word in words]

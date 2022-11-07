@@ -10,7 +10,7 @@ nltk.download('words')
 nltk.download('stopwords')
 from nltk.corpus import words
 
-train_file = open("nlvr-dataset/nlvr/train/train.json")
+train_file = open("nlvr-dataset/nlvr/hidden/hidden.json")
 
 ps = PorterStemmer()  # reducing or chopping the words into their root forms
 correct_words = words.words()  # correct words
@@ -50,7 +50,7 @@ train_json = []
 # In case some lines have already been preprocessed
 saved_lines_amount = 0
 try:
-    saved_file = open("preprocessed-dataset/preprocessed_train_backup.json", 'r')
+    saved_file = open("preprocessed-dataset/preprocessed_hidden_backup.json", 'r')
     saved_lines = json.loads(saved_file.read())
     saved_file.close()
     saved_lines_file = open("lines_number_backup")
@@ -70,7 +70,7 @@ for line in data_train:
         continue
     line_json = json.loads(line)  # reading the line as a json object
 
-    if line_json["label"] == "false":  # Only use tests labelled as "true"
+    if line_json["label"] == "false":  # Only use lines labelled as "true"
         continue
 
     structured_rep = line_json["structured_rep"]
@@ -85,7 +85,6 @@ for line in data_train:
 
     text = tokenizer.tokenize(sentence)  # removing punctuation and tokenizing
     print(text)
-    print(len(text))
     text_nosp = [t for t in text if
                  t not in stopwords_list and t not in sentence_removal]  # removing stopwords and unwanted words
     for i, word in enumerate(text_nosp):
@@ -114,7 +113,9 @@ for line in data_train:
     # Saving every 100 lines just in case
     print(f"Line {lines_preprocessed}/{len(data_train)} preprocessed")
     if lines_preprocessed % 100 == 0:
+
         save_to_json(lines_preprocessed, train_json, 'preprocessed-dataset/preprocessed_train_v3.json')
 
 # Writing all the preprocessed data into a new json
 save_to_json(lines_preprocessed, train_json, 'preprocessed-dataset/preprocessed_train_v3.json')
+

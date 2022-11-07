@@ -2,7 +2,7 @@ import json
 
 data = []
 
-with open("preprocessed-dataset/preprocessed_dev_v3.json") as f:
+with open("preprocessed-dataset/preprocessed_train_v3.json") as f:
     lines = json.loads(f.read())
 
 for element in lines:  # 1 line = 1 image

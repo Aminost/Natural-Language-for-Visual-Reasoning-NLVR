@@ -2,7 +2,7 @@ import json
 
 data = []
 
-with open("preprocessed-dataset/preprocessed_train_v2.json") as f:
+with open("preprocessed-dataset/preprocessed_dev_v3.json") as f:
     lines = json.loads(f.read())
 
 for element in lines:  # 1 line = 1 image
@@ -13,5 +13,6 @@ for element in lines:  # 1 line = 1 image
             shapes.append({"type":shape["type"], "color":shape["color"], "size":shape["size"], "x_loc":shape["x_loc"], "y_loc":shape["y_loc"]})
         data.append(shapes)
 
-with open("structured_representation.json", 'w') as f:
+with open("structured_representation_dev.json", 'w') as f:
     json.dump(data, f)
+print("done")

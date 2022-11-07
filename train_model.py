@@ -1,26 +1,16 @@
 import json
 import pickle
-import re
 from operator import itemgetter
-import tensorflow as tf
-from keras import Sequential, Input, Model
-from keras.layers import LSTM, Dense, Dropout, Embedding, add, Flatten
-from keras_nlp.layers import TokenAndPositionEmbedding
-from nltk.translate.bleu_score import corpus_bleu
-from tensorflow import keras
-import keras_nlp
-import numpy as np
-import os
-from keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
+from keras import Input, Model
+from keras.layers import LSTM, Dense, Dropout, Embedding, add
 import re
-import string
-import random
-import numpy
 import numpy as np
-import torch
 from keras.utils import pad_sequences
 from keras_preprocessing.text import Tokenizer
-from torch import device
+import matplotlib.pyplot as plt
+import tensorflow as tf
+from tensorflow import keras
+from keras import layers
 
 
 def Structured_representations_Features(Annotations):
@@ -175,12 +165,6 @@ def Prepare_Data(Annotations, All=False):
     return Annotations
 
 
-# def get_vocab(list):
-#     res = []
-#     for l in list:
-#         [res.append(x) for x in l if x not in res]
-#     return  len(res)+1, res
-
 with open('nlvr-dataset/nlvr/train/train.json', 'r') as json_file:
     Annot_Train = [json.loads(line) for line in json_file]
 with open('nlvr-dataset/nlvr/dev/dev.json', 'r') as json_file:
@@ -193,12 +177,15 @@ Annot_Test = Prepare_Data(Annot_Test)
 
 Train_T = [Annot['sentence'] for Annot in Annot_Train]
 Test_T = [Annot['sentence'] for Annot in Annot_Test]
+Val_T = [Annot['sentence'] for Annot in Annot_Val]
 
 Train_T = list(map(Preprocessing, Train_T))
+Val_T = list(map(Preprocessing, Train_T))
 Test_T = list(map(Preprocessing, Test_T))
 
-Train_T = ['startseq ' + text + ' endseq' for text in Train_T]
+Train_T = ['startseq ' + text + ' endseq' for text in (Train_T)]
 Test_T = ['startseq ' + text + ' endseq' for text in Test_T]
+Val_T = ['startseq ' + text + ' endseq' for text in Val_T]
 
 print(Train_T[0], len(Train_T))
 print(Test_T[0], len(Test_T))
@@ -206,13 +193,6 @@ print(Test_T[0], len(Test_T))
 with open('preprocessed-dataset/preprocessed_train_v3.json', 'r') as json_file:
     pre_Train = [json.loads(line) for line in json_file]
 print(type(pre_Train))
-
-# f = open('preprocessed-dataset/preprocessed_train_v3.json', 'r')
-# data = json.load(f)
-# word_list=[]
-# for i in  data:
-#     word_list.append(i["sentence"])
-# voc_size, voc=get_vocab(word_list)
 
 corpus_tokenizer = tokenization(Train_T)
 vocab_size = len(corpus_tokenizer.word_index) + 1
@@ -222,13 +202,13 @@ Colors = {'#0099ff': corpus_tokenizer.word_index['blue'], 'Yellow': corpus_token
 Shapes = {'triangle': corpus_tokenizer.word_index['triangle'], 'circle': corpus_tokenizer.word_index['circle'],
           'square': corpus_tokenizer.word_index['square']}
 
-Train_SR = Structured_representations_Features(Annot_Train + Annot_Val)
+Train_SR = Structured_representations_Features(Annot_Train+Annot_Val )
 Test_SR = Structured_representations_Features(Annot_Test)
 
 print(f'voc_size: {vocab_size}')
 print(Train_SR.shape, Test_SR.shape)
 
-lens = [len(T.split(' ')) for T in Train_T + Test_T]
+lens = [len(T.split(' ')) for T in Train_T + Test_T ]
 Voc = list(set(sum([T.split() for T in Train_T], [])))
 max_length = np.array(lens).max()
 
@@ -239,28 +219,7 @@ test_SR, test_x, test_y = Rebuild_Dataset(Test_T, Test_SR, corpus_tokenizer, max
 print(test_x.shape, test_y.shape, test_SR.shape)
 
 
-def define_model(vocab_size, max_length):
-    # feature extractor model
-    inputs1 = Input(shape=(120,))
-    fe1 = Dropout(0.5)(inputs1)
-    fe2 = Dense(256, activation='relu')(fe1)
-    # sequence model
-    inputs2 = Input(shape=(max_length,))
-    se1 = Embedding(vocab_size, 256, mask_zero=True)(inputs2)
-    se2 = Dropout(0.5)(se1)
-    se3 = LSTM(256)(se2)
-    se4 = Dropout(0.5)(se3)
-
-    # decoder model
-    decoder1 = add([fe2, se4])
-    decoder2 = Dense(256, activation='relu')(decoder1)
-    outputs = Dense(vocab_size, activation='softmax')(decoder2)
-    model = Model(inputs=[inputs1, inputs2], outputs=outputs)
-    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-    return model
-
-
-def model_2(vocab_size, max_length):
+def my_model(vocab_size, max_length):
     inputs1 = Input(shape=(120,))
     fe1 = Dropout(0.5)(inputs1)
     fe2 = Dense(256, activation='relu')(fe1)
@@ -269,9 +228,9 @@ def model_2(vocab_size, max_length):
 
     se1 = Embedding(vocab_size, 256, mask_zero=True)(inputs2)
     se2 = LSTM(256, input_shape=(120, max_length), return_sequences=True)(se1)
-   # se3 = Dropout(0.5)(se2)
+    # se3 = Dropout(0.5)(se2)
     se4 = LSTM(256, return_sequences=True)(se2)
-    #se5 = Dropout(0.5)(se4)
+    # se5 = Dropout(0.5)(se4)
     se6 = LSTM(256)(se4)
     decoder1 = add([fe2, se6])
     decoder2 = Dense(256, activation='relu')(decoder1)
@@ -282,49 +241,13 @@ def model_2(vocab_size, max_length):
     return model
 
 
-# input_1 = Input(shape=(24,5))
-# input_2 = Input(shape=(max_length,))
-#
-# LSTM_1 = LSTM(units=128, input_shape=(24, 5), activation="tanh", recurrent_activation="relu", return_sequences=True)(
-#     input_1)
-# # RV = RepeatVector(64)(LSTM_1)
-# LSTM_2 = LSTM(units=128, activation="tanh", recurrent_activation="relu")(LSTM_1)
-# Out1 = Dense(units=max_length, activation='relu')(LSTM_2)
-#
-# embedding_2 = Embedding(vocab_size, 128, mask_zero=True)(input_2)
-# word2 = Dropout(0.1)(embedding_2)
-# context2 = LSTM(128)(word2)
-# Flat2 = Flatten()(context2)
-# Out2 = Dense(units=max_length)(Flat2)
 
-
-from tensorflow.python.client import device_lib
-print(device_lib.list_local_devices())
-
-model = model_2(vocab_size, max_length)  # define_model(vocab_size, max_length)
-
-checkpoint = ModelCheckpoint('Captions/Meta-{epoch: model.fit03d}-{accuracy:03f}-{val_accuracy:03f}.h5', verbose=1,
-                             save_weights_only=True, monitor='val_accuracy', mode='max', save_best_only=True)
-
-reduce_lr_loss = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=5, verbose=1, min_delta=1e-4, mode='min')
-
-CallBacks = [checkpoint, reduce_lr_loss]  #
-
-history = model.fit(x=[train_SR, train_x], y=train_y, batch_size=256, epochs=64)
-
+model = my_model(vocab_size, max_length)  # define_model(vocab_size, max_length)
+history = model.fit(x=[train_SR, train_x], y=train_y, batch_size=256, epochs=64, validation_split=0.2)
 model.save("my_model")
 
 # It can be used to reconstruct the model identically.
 reconstructed_model = keras.models.load_model("my_model")
-
-
-# # aggregation = concatenate([Out2, Out3], axis = -1)
-# aggregation = add([Out1, Out2])
-# decoder = Dense(256, activation='relu')(aggregation)
-# output = Dense(vocab_size, activation='softmax')(decoder)
-#
-# model = Model(inputs=[input_1, input_2], outputs=output)
-# model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
 
 # map an integer to a word
@@ -363,39 +286,102 @@ def generate_desc(model, tokenizer, SR, max_length):
     return in_text
 
 
-def evaluate_model(model, descriptions, SRs, tokenizer, max_length):
-    actual, predicted = list(), list()
-    for i, desc in enumerate(descriptions):
-        yhat = generate_desc(model, tokenizer, SRs[i], max_length)
-        actual.append(desc)
-        predicted.append(yhat.split())
-
-    # calculate BLEU score
-    print('BLEU-1: %f' % corpus_bleu(actual, predicted, weights=(1.0, 0, 0, 0)))
-    print('BLEU-2: %f' % corpus_bleu(actual, predicted, weights=(0.5, 0.5, 0, 0)))
-    print('BLEU-3: %f' % corpus_bleu(actual, predicted, weights=(0.3, 0.3, 0.3, 0)))
-    print('BLEU-4: %f' % corpus_bleu(actual, predicted, weights=(0.25, 0.25, 0.25, 0.25)))
-
 
 print(test_x.shape, test_y.shape, test_SR.shape)
-print(len(Test_T), len(Test_SR), corpus_tokenizer)
+print(len(Test_T), len(Test_SR))
 
 
-# evaluate_model(reconstructed_model, Test_T, Test_SR, corpus_tokenizer, max_length)
-
-def Generate_Captions(model, descriptions, SRs, tokenizer, max_length):
+def Generate_Captions(model, SRs, tokenizer, max_length):
     predicted = list()
     for SR in SRs:
         yhat = generate_desc(model, tokenizer, SR, max_length)
         yhat = re.sub('startseq', '', yhat)
         yhat = re.sub('endseq', '', yhat)
         predicted.append(yhat.strip())
+
     return predicted
 
+print("generate captions...")
+Captions = Generate_Captions(reconstructed_model, Test_SR, corpus_tokenizer, max_length)
+print("done!")
 
-Captions = Generate_Captions(reconstructed_model, Test_T, Test_SR, corpus_tokenizer, max_length)
 
 with open('Generated_Train_Captions64.pkl', 'wb') as output_file:
     pickle.dump(Captions, output_file)
+    print(Captions)
 
-print(Captions)
+my_seq= encode_sequences(corpus_tokenizer,max_length , Captions)
+
+
+def plot_result(history):
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+
+    plt.title('model loss')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend(['train','test'], loc='upper left')
+    plt.show()
+
+plot_result(history)
+
+class TransformerBlock(layers.Layer):
+    def __init__(self, embed_dim, num_heads, ff_dim, rate=0.1):
+        super(TransformerBlock, self).__init__()
+        self.att = layers.MultiHeadAttention(num_heads=num_heads, key_dim=embed_dim)
+        self.ffn = keras.Sequential(
+            [layers.Dense(ff_dim, activation="relu"), layers.Dense(embed_dim), ]
+        )
+        self.layernorm1 = layers.LayerNormalization(epsilon=1e-6)
+        self.layernorm2 = layers.LayerNormalization(epsilon=1e-6)
+        self.dropout1 = layers.Dropout(rate)
+        self.dropout2 = layers.Dropout(rate)
+
+    def call(self, inputs, training):
+        attn_output = self.att(inputs, inputs)
+        attn_output = self.dropout1(attn_output, training=training)
+        out1 = self.layernorm1(inputs + attn_output)
+        ffn_output = self.ffn(out1)
+        ffn_output = self.dropout2(ffn_output, training=training)
+        return self.layernorm2(out1 + ffn_output)
+
+
+class TokenAndPositionEmbedding(layers.Layer):
+    def __init__(self, maxlen, vocab_size, embed_dim):
+        super(TokenAndPositionEmbedding, self).__init__()
+        self.token_emb = layers.Embedding(input_dim=vocab_size, output_dim=embed_dim)
+        self.pos_emb = layers.Embedding(input_dim=maxlen, output_dim=embed_dim)
+
+    def call(self, x):
+        maxlen = tf.shape(x)[-1]
+        positions = tf.range(start=0, limit=maxlen, delta=1)
+        positions = self.pos_emb(positions)
+        x = self.token_emb(x)
+        return x + positions
+
+
+
+
+# the transformer model
+
+embed_dim = 32  # Embedding size for each token
+num_heads = 2  # Number of attention heads
+ff_dim = 32  # Hidden layer size in feed forward network inside transformer
+
+inputs1 = Input(shape=(120,))
+
+inputs = layers.Input(shape=(max_length,))
+embedding_layer = TokenAndPositionEmbedding(max_length, vocab_size, embed_dim)
+x = embedding_layer(inputs)
+transformer_block = TransformerBlock(embed_dim, num_heads, ff_dim)
+x = transformer_block(x)
+x = layers.GlobalAveragePooling1D()(x)
+x = layers.Dropout(0.1)(x)
+x = layers.Dense(20, activation="relu")(x)
+x = layers.Dropout(0.1)(x)
+outputs = layers.Dense(2, activation="softmax")(x)
+
+model = keras.Model(inputs=[inputs1, inputs], outputs=outputs)
+
+model.compile(optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
+history = model.fit(x=[train_SR, train_x], y=np.asarray(my_seq), batch_size=32, epochs=2)
